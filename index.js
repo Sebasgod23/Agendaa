@@ -1,51 +1,44 @@
 const express = require('express');
 const cors = require('cors');
-const helmet = require('helmet');
-const { connectDB } = require('./config/database'); // Conexión a la base de datos
-const usuarioRoutes = require('./routes/usuarioRoutes'); // Rutas de usuarios
-const tareaRoutes = require('./routes/tareaRoutes'); // Rutas de tareas
-const verifyToken = require('./middlewares/authMiddleware'); // Middleware para autenticación
-
-require('dotenv').config();
-
-const app = express();
+const bodyParser = require('body-parser');
+const db = require('./db');
+const app = express.Router();
+const userRoutes = require('./routes/users');
+const gastosRoutes = require('./routes/gastos'); // Importar rutas de gastos
 const PORT = process.env.PORT || 3000;
 
-// Conexión a la base de datos
-connectDB();
+const verifyToken = require('./middlewares/verifyToken'); // Ruta al middleware
 
-// Middlewares globales
+
+
+
+// Middleware
 app.use(cors());
-app.use(helmet());
-app.use(express.json());
+  
+app.use(bodyParser.json());
 
-// Rutas públicas
-app.use('/api/usuarios', usuarioRoutes);
-app.use('/api/tareas', tareaRoutes);
+// Rutas de usuarios
+app.use('/api/users', userRoutes);
+app.use('/api/gastos', gastosRoutes); // Rutas de gastos
 
-// Ruta base (verificación del servidor)
+// Ruta base
 app.get('/', (req, res) => {
     res.send('Servidor funcionando');
 });
 
-// Ruta protegida de ejemplo
 app.get('/protected', verifyToken, (req, res) => {
     res.json({ message: 'Ruta protegida', user: req.user });
+  });
+
+app.get('/api/test-db', (req, res) => {
+    db.query('SELECT 1 + 1 AS result', (err, results) => {
+        if (err) {
+            console.error('Error en la consulta:', err);
+            res.status(500).send('Error en la base de datos');
+        } else {
+            res.json({ result: results[0].result });
+        }
+    });
 });
 
-// Ruta para probar la conexión a la base de datos
-app.get('/api/test-db', async (req, res) => {
-    try {
-        const result = await sequelize.query('SELECT 1 + 1 AS result', { type: QueryTypes.SELECT });
-        res.json({ result: result[0].result });
-    } catch (error) {
-        console.error('Error al conectar con la base de datos:', error);
-        res.status(500).send('Error en la base de datos');
-    }
-});
-
-// Inicio del servidor
-app.listen(PORT, () => {
-    console.log(`Servidor corriendo en http://localhost:${PORT}`);
-});
-
+module.exports = app;
