@@ -37,13 +37,13 @@ router.post('/register', async (req, res) => {
 
     try {
         // Verificar si el nombre ya existe
-        const [existingUser] = await db.query('SELECT * FROM Usuarios WHERE nombre = ?', [nombre]);
+        const [existingUser] = await db.query('SELECT * FROM Usuarios_s WHERE nombre = ?', [nombre]);
         if (existingUser.length > 0) {
             return res.status(400).json({ message: 'El nombre de usuario ya está en uso' });
         }
 
         // Verificar si el correo ya está registrado
-        const [existingEmail] = await db.query('SELECT * FROM Usuarios WHERE email = ?', [email]);
+        const [existingEmail] = await db.query('SELECT * FROM Usuarios_s WHERE email = ?', [email]);
         if (existingEmail.length > 0) {
             return res.status(400).json({ message: 'El correo electrónico ya está registrado' });
         }
@@ -52,7 +52,7 @@ router.post('/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Insertar el nuevo usuario en la base de datos
-        await db.query('INSERT INTO Usuarios (nombre, email, password) VALUES (?, ?, ?)', [nombre, email, hashedPassword]);
+        await db.query('INSERT INTO Usuarios_s (nombre, email, password) VALUES (?, ?, ?)', [nombre, email, hashedPassword]);
 
         res.status(201).json({ message: 'Usuario registrado con éxito' });
     } catch (err) {
@@ -72,7 +72,7 @@ router.post('/login', async (req, res) => {
 
     try {
         // Buscar el usuario en la base de datos
-        const [results] = await db.query('SELECT * FROM Usuarios WHERE email = ?', [email]);
+        const [results] = await db.query('SELECT * FROM Usuarios_s WHERE email = ?', [email]);
         if (results.length === 0) {
             return res.status(404).json({ message: 'Usuario no encontrado' });
         }
